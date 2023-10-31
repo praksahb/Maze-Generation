@@ -2,5 +2,5 @@
  procedurally generated maze using hunt and kill algorithm.
     with custom editor window 
 
-    Resource used: Maze Algorithms in Unity - No Man's Sky Edition! - YouTube
+    Resource used: https://www.youtube.com/watch?v=IrO4mswO2o4
 
