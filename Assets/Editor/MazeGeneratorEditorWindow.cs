@@ -1,5 +1,7 @@
 using UnityEditor;
+using UnityEditor.Networking.PlayerConnection;
 using UnityEngine;
+using UnityEngine.Networking.PlayerConnection;
 
 namespace MazeGeneration
 {
@@ -15,15 +17,37 @@ namespace MazeGeneration
         private int mazeColumns = 10;
 
         private GameObject wallPrefab;
+        private Material floorMaterial;
         private MazeLoader mazeGenerator;
         private GameObject parentObj;
+
+
+        private IConnectionState connectionState;
+        private static MazeGeneratorEditorWindow currWindow;
 
         [MenuItem("Window/Maze Generator")]
         public static void ShowWindow()
         {
-            GetWindow<MazeGeneratorEditorWindow>("Maze Generator");
+            currWindow = GetWindow<MazeGeneratorEditorWindow>("Maze Generator");
+            currWindow.Show();
         }
 
+        private void OnEnable()
+        {
+            connectionState = PlayerConnectionGUIUtility.GetConnectionState(this, OnConnected);
+        }
+
+        private void OnDisable()
+        {
+            connectionState.Dispose();
+        }
+
+        private void OnConnected(string player)
+        {
+            Debug.Log(string.Format("currWindow connected to {0}", player));
+        }
+
+        // Main function which will update the editor over fixed time 
         private void OnGUI()
         {
             SetupGUI();
@@ -48,7 +72,6 @@ namespace MazeGeneration
                 DestroyImmediate(parentObj);
             }
             GUILayout.FlexibleSpace();
-
             EditorGUILayout.EndHorizontal();
         }
 
@@ -61,7 +84,7 @@ namespace MazeGeneration
 
             if (mazeGenerator == null)
             {
-                mazeGenerator = new MazeLoader(mazeRows, mazeColumns, wallPrefab);
+                mazeGenerator = new MazeLoader(mazeRows, mazeColumns, wallPrefab, floorMaterial);
             }
 
         }
@@ -96,13 +119,20 @@ namespace MazeGeneration
             EditorGUILayout.Space();
         }
 
+        // Wall / floor
         private void PrefabSetting()
         {
             // Prefabs - Walls / Floors
+            // get wall prefab and floor material from file location
             wallPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Wall.prefab");
+            floorMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Floor Material.mat");
+
             EditorGUILayout.LabelField("Maze Prefabs", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical("Box");
+            // display as objectFields in editor window
             wallPrefab = EditorGUILayout.ObjectField("Wall Prefab", wallPrefab, typeof(GameObject), true) as GameObject;
+            floorMaterial = EditorGUILayout.ObjectField("Floor Material", floorMaterial, typeof(Material), true) as Material;
+
             // change size of the wall prefab ( using same value for both x and y)
             wallSize = EditorGUILayout.FloatField("Wall Size: ", wallSize);
             wallPrefab.transform.localScale = new Vector3(wallSize, wallSize, wallSize / 10f);
